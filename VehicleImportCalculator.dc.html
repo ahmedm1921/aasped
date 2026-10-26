@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script src="./kalkulator-uvoza.js"></script>
+<style>
+body{margin:0;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;color:#121620;-webkit-font-smoothing:antialiased}
+a{color:#1f4fb0}
+a:hover{color:#121a2e}
+*{box-sizing:border-box}
+</style>
+</helmet>
+<div style="width:100%;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;color:#121620;display:flex;flex-direction:column;gap:24px">
+<sc-if value="{{ notReady }}" hint-placeholder-val="{{ false }}"><div style="padding:40px;text-align:center;color:#5d6472">Učitavanje kalkulatora…</div></sc-if>
+<sc-if value="{{ ready }}" hint-placeholder-val="{{ true }}">
+
+<ol aria-label="Koraci kalkulatora" style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+  <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+    <li style="display:flex">
+      <button type="button" onClick="{{ s.onClick }}" aria-current="{{ s.current }}" disabled="{{ s.disabled }}" style="flex:1;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;border:1px solid {{ s.bd }};background:{{ s.bg }};color:{{ s.fg }};cursor:{{ s.cursor }};text-align:left;font-family:inherit">
+        <span style="width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;background:{{ s.dotBg }};color:{{ s.dotFg }}">{{ s.n }}</span>
+        <span style="display:flex;flex-direction:column;min-width:0"><span style="font-size:12px;opacity:0.8">Korak {{ s.n }}</span><span style="font-size:15px;font-weight:600">{{ s.label }}</span></span>
+      </button>
+    </li>
+  </sc-for>
+</ol>
+
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+<div style="flex:1 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+
+<sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ true }}">
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px;background:#f4f5f7">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Gledate oglas? Popunite polja iz njega</h3>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#5d6472">Zalijepite tekst oglasa koji sadrži cijenu, godište i tehničke podatke. Tekst se obrađuje samo u vašem pregledniku i nigdje se ne šalje.</p>
+    </div>
+    <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Zalijepite link ili tekst oglasa
+      <textarea rows="3" value="{{ adText }}" onChange="{{ setAdText }}" placeholder="npr. VW Golf 2.0 TDI, EZ 03/2017, 110 kW, 1968 ccm, Diesel, Euro 6, 119 g/km, 9.000 €" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit;resize:vertical"></textarea>
+    </label>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button type="button" onClick="{{ fillFromAd }}" style="background:#ffffff;color:#121620;border:1.5px solid #121620;border-radius:8px;padding:12.5px 22px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Popuni polja</button>
+      <sc-if value="{{ hasAdMsg }}" hint-placeholder-val="{{ false }}"><span role="status" style="font-size:14px;color:{{ adMsgColor }};line-height:1.5;flex:1 1 240px">{{ adMsg }}</span></sc-if>
+    </div>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Vozilo i kupovina</h3>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <label for="kup-cijena" style="font-size:14px;font-weight:500;color:#2c323d">Kupovna cijena</label>
+      <input id="kup-cijena" type="text" inputmode="decimal" value="{{ price }}" onChange="{{ setPrice }}" placeholder="npr. 9000" aria-invalid="{{ priceInvalid }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit;font-size:20px;font-weight:600">
+      <div role="group" aria-label="Valuta" style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ currencies }}" as="c" hint-placeholder-count="6"><button type="button" onClick="{{ c.onClick }}" aria-pressed="{{ c.pressed }}" style="padding:10px 14px;border-radius:8px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">{{ c.label }}</button></sc-for></div>
+      <span style="font-size:14px;color:#454c59">≈ <strong style="color:#121620">{{ priceKMText }}</strong> · {{ rateText }}</span>
+      <sc-if value="{{ priceErr }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;color:#b3261e">{{ priceErrText }}</span></sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="font-size:14px;font-weight:500;color:#2c323d">Država kupovine</span>
+      <div role="group" aria-label="Država kupovine" style="display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ primaryCountries }}" as="c" hint-placeholder-count="7"><button type="button" onClick="{{ c.onClick }}" aria-pressed="{{ c.pressed }}" style="padding:10px 14px;border-radius:8px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">{{ c.label }}</button></sc-for>
+        <button type="button" onClick="{{ toggleMore }}" aria-expanded="{{ showMore }}" style="padding:10px 14px;border-radius:8px;border:1px dashed #9aa3b2;background:#ffffff;color:#121620;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">{{ moreLabel }}</button>
+      </div>
+      <sc-if value="{{ showMore }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ moreCountries }}" as="c" hint-placeholder-count="8"><button type="button" onClick="{{ c.onClick }}" aria-pressed="{{ c.pressed }}" style="padding:10px 14px;border-radius:8px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">{{ c.label }}</button></sc-for></div></sc-if>
+      <span style="font-size:13px;line-height:1.5;color:#5d6472">Država kupovine utiče samo na procjenu prijevoza. Ne određuje porijeklo vozila niti pravo na carinu od 0%.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <label for="kup-prijevoz" style="font-size:14px;font-weight:500;color:#2c323d">Troškovi prijevoza do granice BiH</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="kup-prijevoz" type="text" inputmode="decimal" value="{{ transport }}" onChange="{{ setTransport }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit;flex:1 1 180px;width:auto">
+        <div role="group" aria-label="Valuta prijevoza" style="display:flex;gap:8px"><sc-for list="{{ transportCurrencies }}" as="c" hint-placeholder-count="2"><button type="button" onClick="{{ c.onClick }}" aria-pressed="{{ c.pressed }}" style="padding:10px 14px;border-radius:8px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};font-size:14px;font-weight:500;cursor:pointer;font-family:inherit">{{ c.label }}</button></sc-for></div>
+      </div>
+      <span style="font-size:14px;color:#454c59">≈ <strong style="color:#121620">{{ transportKMText }}</strong> · {{ transportHint }}</span>
+      <span style="font-size:13px;line-height:1.5;color:#5d6472">Prijevoz do ulaska u BiH ulazi u carinsku vrijednost. Prijevoz nakon granice i ostale troškove unosite u koraku 3 pod „Dodatni troškovi“.</span>
+    </div>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Pregled</h3>
+    <div style="display:flex;flex-direction:column">
+<sc-for list="{{ step1Summary }}" as="r" hint-placeholder-count="3">
+  <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #e9ecf1;align-items:flex-start;background:{{ r.rowBg }}">
+    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:15px;font-weight:{{ r.weight }};color:#121620">{{ r.label }}</span><sc-if value="{{ r.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;letter-spacing:0.02em;padding:2px 8px;border-radius:999px;background:{{ r.bBg }};color:{{ r.bFg }}">{{ r.badge }}</span></sc-if></div>
+      <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;line-height:1.5;color:#5d6472">{{ r.note }}</span></sc-if>
+    </div>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;white-space:nowrap;font-weight:{{ r.weight }};color:{{ r.color }}">{{ r.value }}</span>
+  </div>
+</sc-for></div>
+    <sc-for list="{{ step1Errors }}" as="m" hint-placeholder-count="0"><div role="status" style="padding:12px 14px;border-radius:8px;background:#fdecea;border:1px solid #f3c2bd;color:#8c1d18;font-size:14px;line-height:1.5">{{ m }}</div></sc-for>
+    <div style="display:flex;justify-content:flex-end"><button type="button" onClick="{{ goStep2 }}" disabled="{{ step1Blocked }}" style="background:#1f4fb0;color:#ffffff;border:0;border-radius:8px;padding:14px 24px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;opacity:{{ step1Opacity }}">Nastavi</button></div>
+  </section>
+</sc-if>
+
+<sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Tehničke specifikacije</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px">
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Marka vozila<input type="text" list="kalk-marke" value="{{ f.brand }}" onChange="{{ on.brand }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"><datalist id="kalk-marke"><sc-for list="{{ brands }}" as="b" hint-placeholder-count="0"><option value="{{ b }}"></option></sc-for></datalist></label>
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Model vozila <span style="font-weight:400;color:#5d6472">(opcionalno)</span><input type="text" value="{{ f.model }}" onChange="{{ on.model }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"></label>
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Godište<input type="text" value="{{ f.year }}" onChange="{{ on.year }}" inputmode="numeric" placeholder="npr. 2018" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"></label>
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Kategorija vozila<select value="{{ f.category }}" onChange="{{ on.category }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"><sc-for list="{{ categories }}" as="o" hint-placeholder-count="1"><option value="{{ o.id }}">{{ o.name }}</option></sc-for></select></label>
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Zemlja porijekla<select value="{{ f.origin }}" onChange="{{ on.origin }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"><sc-for list="{{ origins }}" as="o" hint-placeholder-count="1"><option value="{{ o.id }}">{{ o.name }}</option></sc-for></select><span style="font-size:13px;line-height:1.5;color:#5d6472;font-weight:400">Zemlja proizvodnje vozila. Ne zaključuje se iz marke ni iz lokacije prodavca.</span></label>
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Euro norma<select value="{{ f.euro }}" onChange="{{ on.euro }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"><sc-for list="{{ euroNorms }}" as="o" hint-placeholder-count="1"><option value="{{ o.id }}">{{ o.name }}</option></sc-for></select></label>
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Vrsta goriva<select value="{{ f.fuel }}" onChange="{{ on.fuel }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"><option value="">Odaberite…</option><sc-for list="{{ fuels }}" as="o" hint-placeholder-count="1"><option value="{{ o.id }}">{{ o.name }}</option></sc-for></select></label>
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Kubikaža (cm³)<input type="text" inputmode="numeric" value="{{ f.ccm }}" onChange="{{ on.ccm }}" disabled="{{ ccmDisabled }}" placeholder="{{ ccmPlaceholder }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit;background:{{ ccmBg }}"></label>
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Snaga (kW)<input type="text" inputmode="numeric" value="{{ f.kw }}" onChange="{{ on.kw }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"><span style="font-size:13px;line-height:1.5;color:#5d6472;font-weight:400">{{ ksText }}</span></label>
+      <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">CO₂ emisija (g/km)<input type="text" inputmode="numeric" value="{{ f.co2 }}" onChange="{{ on.co2 }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"><span style="font-size:13px;line-height:1.5;color:#5d6472;font-weight:400">Polje V.7 u saobraćajnoj dozvoli EU ili COC dokument. Koristi se samo informativno.</span></label>
+    </div>
+    <sc-for list="{{ techErrors }}" as="m" hint-placeholder-count="0"><div role="status" style="padding:12px 14px;border-radius:8px;background:#fdecea;border:1px solid #f3c2bd;color:#8c1d18;font-size:14px;line-height:1.5">{{ m }}</div></sc-for>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px">
+      <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;font-weight:500;color:#2c323d">Stanje vozila</span><div role="group" style="display:flex;gap:8px;flex-wrap:wrap">
+  <button type="button" onClick="{{ cond.setA }}" aria-pressed="{{ cond.aPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ cond.aBd }};background:{{ cond.aBg }};color:{{ cond.aFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Polovno</button>
+  <button type="button" onClick="{{ cond.setB }}" aria-pressed="{{ cond.bPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ cond.bBd }};background:{{ cond.bBg }};color:{{ cond.bFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Novo</button>
+</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;font-weight:500;color:#2c323d">Imam COC dokument</span><div role="group" style="display:flex;gap:8px;flex-wrap:wrap">
+  <button type="button" onClick="{{ coc.setA }}" aria-pressed="{{ coc.aPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ coc.aBd }};background:{{ coc.aBg }};color:{{ coc.aFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Da</button>
+  <button type="button" onClick="{{ coc.setB }}" aria-pressed="{{ coc.bPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ coc.bBd }};background:{{ coc.bBg }};color:{{ coc.bFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Ne</button>
+</div><span style="font-size:13px;line-height:1.5;color:#5d6472">COC (Certificate of Conformity) utiče na naknadu za homologaciju.</span></div>
+    </div>
+    <sc-for list="{{ techWarnings }}" as="m" hint-placeholder-count="0"><div role="status" style="padding:12px 14px;border-radius:8px;background:#fdf6e7;border:1px solid #f0d9a8;color:#6b4500;font-size:14px;line-height:1.5">{{ m }}</div></sc-for>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Dokaz o preferencijalnom porijeklu</h3>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#5d6472">EUR.1 ili izjava o porijeklu na fakturi dokazuje da je vozilo porijeklom iz EU ili EFTA. Sama kupovina u EU nije dovoljna. EUR.1 izdaje carina zemlje izvoza, a ne prodavač.</p>
+    </div>
+    <span style="font-size:14px;font-weight:500;color:#2c323d">Imam EUR.1 certifikat ili drugi prihvatljiv dokaz o porijeklu</span>
+    <div role="group" style="display:flex;gap:8px;flex-wrap:wrap">
+  <button type="button" onClick="{{ eur1.setA }}" aria-pressed="{{ eur1.aPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ eur1.aBd }};background:{{ eur1.aBg }};color:{{ eur1.aFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Da</button>
+  <button type="button" onClick="{{ eur1.setB }}" aria-pressed="{{ eur1.bPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ eur1.bBd }};background:{{ eur1.bBg }};color:{{ eur1.bFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Ne</button>
+</div>
+    <span style="font-size:14px;color:#454c59;line-height:1.5">{{ eur1Text }}</span>
+    <sc-for list="{{ eur1Warnings }}" as="m" hint-placeholder-count="0"><div role="status" style="padding:12px 14px;border-radius:8px;background:#fdf6e7;border:1px solid #f0d9a8;color:#6b4500;font-size:14px;line-height:1.5">{{ m }}</div></sc-for>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Povlastice i oslobađanja</h3>
+      <p style="margin:0;font-size:13px;line-height:1.5;color:#5d6472">Povlastice se međusobno isključuju i nikad se ne uključuju automatski. Rezultat je uslovni scenario — konačnu odluku donosi Uprava za indirektno oporezivanje BiH.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ benefitList }}" as="b" hint-placeholder-count="3">
+        <button type="button" role="switch" aria-checked="{{ b.active }}" onClick="{{ b.onClick }}" style="display:flex;gap:14px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:10px;border:1px solid {{ b.bd }};background:{{ b.bg }};cursor:pointer;font-family:inherit;color:#121620">
+          <span style="flex:none;width:40px;height:24px;border-radius:999px;background:{{ b.trackBg }};position:relative;margin-top:2px"><span style="position:absolute;top:3px;left:{{ b.knobLeft }};width:18px;height:18px;border-radius:50%;background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.25)"></span></span>
+          <span style="display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:600">{{ b.label }}</span><span style="font-size:13px;line-height:1.5;color:#5d6472">{{ b.desc }}</span></span>
+        </button>
+      </sc-for>
+    </div>
+    <sc-if value="{{ hasConflict }}" hint-placeholder-val="{{ false }}">
+      <div role="alertdialog" style="padding:16px;border-radius:10px;background:#fdf6e7;border:1px solid #f0d9a8;display:flex;flex-direction:column;gap:12px">
+        <span style="font-size:14px;line-height:1.5;color:#6b4500">„{{ conflictFrom }}“ i „{{ conflictTo }}“ se ne mogu kombinovati. Obračunava se samo jedna povlastica — koju želite?</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" onClick="{{ keepConflict }}" style="background:#ffffff;color:#121620;border:1.5px solid #121620;border-radius:8px;padding:12.5px 22px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;padding:9px 16px">Zadrži: {{ conflictFrom }}</button><button type="button" onClick="{{ switchConflict }}" style="background:#1f4fb0;color:#ffffff;border:0;border-radius:8px;padding:14px 24px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;padding:10px 16px">Prebaci na: {{ conflictTo }}</button></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ invActive }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:16px;padding:18px;border-radius:10px;background:#f4f5f7">
+        <span style="font-size:15px;font-weight:600">Osoba sa invaliditetom</span>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;color:#2c323d">Imam rješenje o invaliditetu s propisanim stepenom oštećenja (npr. 60–100%, RVI prema propisu)</span><div role="group" style="display:flex;gap:8px;flex-wrap:wrap">
+  <button type="button" onClick="{{ invLevel.setA }}" aria-pressed="{{ invLevel.aPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ invLevel.aBd }};background:{{ invLevel.aBg }};color:{{ invLevel.aFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Da</button>
+  <button type="button" onClick="{{ invLevel.setB }}" aria-pressed="{{ invLevel.bPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ invLevel.bBd }};background:{{ invLevel.bBg }};color:{{ invLevel.bFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Ne</button>
+</div></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;color:#2c323d">Vozilo je posebno prilagođeno za upravljanje ili prijevoz osobe s invaliditetom</span><div role="group" style="display:flex;gap:8px;flex-wrap:wrap">
+  <button type="button" onClick="{{ invAdapted.setA }}" aria-pressed="{{ invAdapted.aPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ invAdapted.aBd }};background:{{ invAdapted.aBg }};color:{{ invAdapted.aFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Da</button>
+  <button type="button" onClick="{{ invAdapted.setB }}" aria-pressed="{{ invAdapted.bPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ invAdapted.bBd }};background:{{ invAdapted.bBg }};color:{{ invAdapted.bFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Ne</button>
+</div></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;color:#2c323d">Nisam koristio/la ovo oslobađanje u prethodnih 5 godina</span><div role="group" style="display:flex;gap:8px;flex-wrap:wrap">
+  <button type="button" onClick="{{ invNotUsed.setA }}" aria-pressed="{{ invNotUsed.aPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ invNotUsed.aBd }};background:{{ invNotUsed.aBg }};color:{{ invNotUsed.aFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Da</button>
+  <button type="button" onClick="{{ invNotUsed.setB }}" aria-pressed="{{ invNotUsed.bPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ invNotUsed.bBd }};background:{{ invNotUsed.bBg }};color:{{ invNotUsed.bFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Ne</button>
+</div></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;color:#2c323d">Vozilo neću prodati, ustupiti ni založiti 3 godine</span><div role="group" style="display:flex;gap:8px;flex-wrap:wrap">
+  <button type="button" onClick="{{ invKeep.setA }}" aria-pressed="{{ invKeep.aPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ invKeep.aBd }};background:{{ invKeep.aBg }};color:{{ invKeep.aFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Da</button>
+  <button type="button" onClick="{{ invKeep.setB }}" aria-pressed="{{ invKeep.bPressed }}" style="flex:1 1 90px;padding:11px 14px;border-radius:8px;border:1px solid {{ invKeep.bBd }};background:{{ invKeep.bBg }};color:{{ invKeep.bFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Ne</button>
+</div></div>
+        <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Vrijednosni limit (KM)<input type="text" inputmode="decimal" value="{{ invLimit }}" onChange="{{ setInvLimit }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit;max-width:240px"><span style="font-size:13px;line-height:1.5;color:#5d6472;font-weight:400">{{ invLimitNote }}</span></label>
+        <span style="font-size:14px;color:#454c59">Cijena vozila bez prijevoza: <strong style="color:#121620">{{ priceKMText }}</strong> · {{ invLimitCheck }}</span>
+        <span style="font-size:13px;line-height:1.5;color:#5d6472">Pravo zavisi od kategorije korisnika, stepena invaliditeta, namjene vozila i dokumentacije. Prodaja prije isteka roka znači naknadno plaćanje carine i PDV-a.</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ povActive }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:16px;padding:18px;border-radius:10px;background:#f4f5f7">
+        <span style="font-size:15px;font-weight:600">Povratnik iz inostranstva</span>
+        <sc-for list="{{ povQuestions }}" as="q" hint-placeholder-count="6">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:14px;color:#2c323d;line-height:1.45">{{ q.n }}. {{ q.text }}</span>
+            <div role="group" style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" onClick="{{ q.setYes }}" aria-pressed="{{ q.yesPressed }}" style="flex:1 1 90px;padding:10px 14px;border-radius:8px;border:1px solid {{ q.yesBd }};background:{{ q.yesBg }};color:{{ q.yesFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Da</button>
+              <button type="button" onClick="{{ q.setNo }}" aria-pressed="{{ q.noPressed }}" style="flex:1 1 90px;padding:10px 14px;border-radius:8px;border:1px solid {{ q.noBd }};background:{{ q.noBg }};color:{{ q.noFg }};font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Ne</button>
+            </div>
+          </div>
+        </sc-for>
+        <span style="font-size:13px;line-height:1.5;color:#5d6472">Povlastica uključuje oslobađanje od carine i PDV-a i izuzeće od homologacije (M1, N1, L), uz zabranu prodaje 36 mjeseci i rok od 12 mjeseci za uvoz nakon preseljenja.</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ ekoActive }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:10px;background:#f4f5f7">
+        <span style="font-size:15px;font-weight:600">Povlastica za nova ekološka vozila</span>
+        <span style="font-size:13px;line-height:1.5;color:#5d6472">Privremena mjera (Sl. glasnik BiH 22/26, važi do 31.12.2026.) samo za NOVA vozila: M1 električna i CNG/LPG 0%, M1 benzin-hibrid i plug-in hibrid 5%, N1 električna i CNG 0%. Dizel-hibrid (bez punjenja) i motocikli nisu obuhvaćeni. PDV se plaća. Uz deklaraciju je potrebna potvrda Vanjskotrgovinske komore BiH.</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasBenefitMsg }}" hint-placeholder-val="{{ false }}"><div role="status" style="padding:12px 14px;border-radius:8px;background:{{ benefitMsgBg }};border:1px solid {{ benefitMsgBd }};color:{{ benefitMsgFg }};font-size:14px;line-height:1.5">{{ benefitMsg }}</div></sc-if>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Sažetak prije izračunavanja</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));column-gap:28px">
+      <sc-for list="{{ step2Summary }}" as="r" hint-placeholder-count="8">
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #e9ecf1;font-size:14px"><span style="color:#5d6472">{{ r.label }}</span><span style="font-weight:500;text-align:right">{{ r.value }}</span></div>
+      </sc-for>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <button type="button" onClick="{{ goStep1 }}" style="background:#ffffff;color:#121620;border:1.5px solid #121620;border-radius:8px;padding:12.5px 22px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Nazad</button>
+      <button type="button" onClick="{{ goStep3 }}" disabled="{{ step2Blocked }}" style="background:#1f4fb0;color:#ffffff;border:0;border-radius:8px;padding:14px 24px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;opacity:{{ step2Opacity }}">Izračunaj troškove uvoza</button>
+    </div>
+  </section>
+</sc-if>
+
+<sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
+  <sc-if value="{{ incomplete }}" hint-placeholder-val="{{ false }}"><div role="status" style="padding:12px 14px;border-radius:8px;background:#fdf6e7;border:1px solid #f0d9a8;color:#6b4500;font-size:14px;line-height:1.5"><strong>Nepotpuna procjena.</strong> Nedostaje: {{ missingText }}. Obračun dažbina je moguć, ali provjera propisa (npr. Euro norma) nije potpuna.</div></sc-if>
+  <sc-for list="{{ resultWarnings }}" as="m" hint-placeholder-count="0"><div role="status" style="padding:12px 14px;border-radius:8px;background:#fdf6e7;border:1px solid #f0d9a8;color:#6b4500;font-size:14px;line-height:1.5">{{ m }}</div></sc-for>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Osnovica</h3>
+    <div style="display:flex;flex-direction:column">
+<sc-for list="{{ baseRows }}" as="r" hint-placeholder-count="3">
+  <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #e9ecf1;align-items:flex-start;background:{{ r.rowBg }}">
+    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:15px;font-weight:{{ r.weight }};color:#121620">{{ r.label }}</span><sc-if value="{{ r.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;letter-spacing:0.02em;padding:2px 8px;border-radius:999px;background:{{ r.bBg }};color:{{ r.bFg }}">{{ r.badge }}</span></sc-if></div>
+      <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;line-height:1.5;color:#5d6472">{{ r.note }}</span></sc-if>
+    </div>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;white-space:nowrap;font-weight:{{ r.weight }};color:{{ r.color }}">{{ r.value }}</span>
+  </div>
+</sc-for></div>
+    <span style="font-size:13px;line-height:1.5;color:#5d6472">Carinsku vrijednost utvrđuje carinski organ i ona ne mora biti jednaka cijeni s fakture.</span>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Propisane dažbine</h3>
+    <div style="display:flex;flex-direction:column">
+<sc-for list="{{ dutyRows }}" as="r" hint-placeholder-count="3">
+  <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #e9ecf1;align-items:flex-start;background:{{ r.rowBg }}">
+    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:15px;font-weight:{{ r.weight }};color:#121620">{{ r.label }}</span><sc-if value="{{ r.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;letter-spacing:0.02em;padding:2px 8px;border-radius:999px;background:{{ r.bBg }};color:{{ r.bFg }}">{{ r.badge }}</span></sc-if></div>
+      <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;line-height:1.5;color:#5d6472">{{ r.note }}</span></sc-if>
+    </div>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;white-space:nowrap;font-weight:{{ r.weight }};color:{{ r.color }}">{{ r.value }}</span>
+  </div>
+</sc-for></div>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Naknade</h3>
+    <div style="display:flex;flex-direction:column">
+<sc-for list="{{ feeRows }}" as="r" hint-placeholder-count="3">
+  <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #e9ecf1;align-items:flex-start;background:{{ r.rowBg }}">
+    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:15px;font-weight:{{ r.weight }};color:#121620">{{ r.label }}</span><sc-if value="{{ r.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;letter-spacing:0.02em;padding:2px 8px;border-radius:999px;background:{{ r.bBg }};color:{{ r.bFg }}">{{ r.badge }}</span></sc-if></div>
+      <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;line-height:1.5;color:#5d6472">{{ r.note }}</span></sc-if>
+    </div>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;white-space:nowrap;font-weight:{{ r.weight }};color:{{ r.color }}">{{ r.value }}</span>
+  </div>
+</sc-for></div>
+    <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Špediter — vaša procjena (KM)<input type="text" inputmode="decimal" value="{{ spediter }}" onChange="{{ setSpediter }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit;max-width:240px"></label>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <button type="button" onClick="{{ toggleExtras }}" aria-expanded="{{ showExtras }}" style="display:flex;justify-content:space-between;align-items:center;background:none;border:0;padding:0;cursor:pointer;font-family:inherit;color:#121620"><span style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Dodatni troškovi</span><span style="font-family:'IBM Plex Mono',monospace;font-size:15px">{{ extrasTotalText }} {{ extrasIcon }}</span></button>
+    <sc-if value="{{ showExtras }}" hint-placeholder-val="{{ false }}">
+      <span style="font-size:13px;line-height:1.5;color:#5d6472">Ne unosite ponovo prijevoz do granice, homologaciju ni carinski terminal — već su uračunati. Označite „ulazi u osnovicu PDV-a“ za zavisne troškove do prvog odredišta u BiH (npr. prijevoz od granice).</span>
+      <sc-for list="{{ extras }}" as="x" hint-placeholder-count="0">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px;align-items:end;padding:12px;border-radius:10px;background:#f4f5f7">
+          <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Naziv<input type="text" value="{{ x.name }}" onChange="{{ x.setName }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"></label>
+          <label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">Iznos (KM)<input type="text" inputmode="decimal" value="{{ x.amount }}" onChange="{{ x.setAmount }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"></label>
+          <label style="display:flex;gap:8px;align-items:center;font-size:14px;color:#2c323d;padding:12px 0"><input type="checkbox" checked="{{ x.inVat }}" onChange="{{ x.toggleVat }}" style="width:18px;height:18px;accent-color:#1f4fb0">Ulazi u osnovicu PDV-a</label>
+          <button type="button" onClick="{{ x.remove }}" style="background:#ffffff;color:#121620;border:1.5px solid #121620;border-radius:8px;padding:12.5px 22px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;padding:10px 14px;border-color:#cdd2db">Ukloni</button>
+        </div>
+      </sc-for>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ extraPresets }}" as="p" hint-placeholder-count="4"><button type="button" onClick="{{ p.add }}" disabled="{{ p.disabled }}" style="padding:9px 14px;border-radius:8px;border:1px dashed #9aa3b2;background:#ffffff;color:#121620;font-size:14px;cursor:pointer;font-family:inherit;opacity:{{ p.opacity }}">+ {{ p.label }}</button></sc-for></div>
+    </sc-if>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Ukupni troškovi uvoza</h3>
+    <div style="display:flex;flex-direction:column">
+<sc-for list="{{ importRows }}" as="r" hint-placeholder-count="3">
+  <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #e9ecf1;align-items:flex-start;background:{{ r.rowBg }}">
+    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:15px;font-weight:{{ r.weight }};color:#121620">{{ r.label }}</span><sc-if value="{{ r.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;letter-spacing:0.02em;padding:2px 8px;border-radius:999px;background:{{ r.bBg }};color:{{ r.bFg }}">{{ r.badge }}</span></sc-if></div>
+      <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;line-height:1.5;color:#5d6472">{{ r.note }}</span></sc-if>
+    </div>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;white-space:nowrap;font-weight:{{ r.weight }};color:{{ r.color }}">{{ r.value }}</span>
+  </div>
+</sc-for></div>
+  </section>
+
+  <section style="background:#121a2e;color:#ffffff;border-radius:12px;padding:clamp(22px,3.4vw,32px);display:flex;flex-direction:column;gap:16px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.06em;color:#8fb2f2">UKUPNA CIJENA VOZILA S PRIJEVOZOM I UVOZNIM TROŠKOVIMA</span>
+    <span style="font-size:clamp(34px,5vw,48px);font-weight:700;letter-spacing:-0.02em;line-height:1">{{ totalText }}</span>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:12px;border-top:1px solid #34405a;padding-top:16px">
+      <sc-for list="{{ totalSummary }}" as="t" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:13px;color:#9aa4b8">{{ t.label }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:15px">{{ t.value }}</span></div></sc-for>
+    </div>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#454c59">Procjena ne uključuje troškove registracije u BiH, obaveznog osiguranja, registarskih tablica, tehničkog pregleda i eko-takse, osim ako su posebno dodani u obračun.</p>
+    <label style="display:flex;gap:10px;align-items:center;font-size:15px;font-weight:500;cursor:pointer"><input type="checkbox" checked="{{ regOn }}" onChange="{{ toggleReg }}" style="width:18px;height:18px;accent-color:#1f4fb0">Dodaj troškove registracije (opcionalno)</label>
+    <sc-if value="{{ regOn }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px">
+        <sc-for list="{{ regFields }}" as="g" hint-placeholder-count="4"><label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">{{ g.label }}<input type="text" inputmode="decimal" value="{{ g.value }}" onChange="{{ g.onChange }}" placeholder="KM" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit"></label></sc-for>
+      </div>
+      <span style="font-size:13px;line-height:1.5;color:#5d6472">{{ co2Note }}</span>
+      <div style="display:flex;flex-direction:column">
+<sc-for list="{{ regRows }}" as="r" hint-placeholder-count="3">
+  <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #e9ecf1;align-items:flex-start;background:{{ r.rowBg }}">
+    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:15px;font-weight:{{ r.weight }};color:#121620">{{ r.label }}</span><sc-if value="{{ r.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;letter-spacing:0.02em;padding:2px 8px;border-radius:999px;background:{{ r.bBg }};color:{{ r.bFg }}">{{ r.badge }}</span></sc-if></div>
+      <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;line-height:1.5;color:#5d6472">{{ r.note }}</span></sc-if>
+    </div>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;white-space:nowrap;font-weight:{{ r.weight }};color:{{ r.color }}">{{ r.value }}</span>
+  </div>
+</sc-for></div>
+    </sc-if>
+  </section>
+
+  <section style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px">
+    <h3 style="margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;color:#121620">Poređenje scenarija</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px">
+      <sc-for list="{{ scenarios }}" as="s" hint-placeholder-count="2">
+        <div style="border:1px solid {{ s.bd }};border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px;background:{{ s.bg }}">
+          <span style="font-size:14px;font-weight:600;line-height:1.35">{{ s.label }}</span>
+          <sc-if value="{{ s.valid }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:#454c59"><span>Carina: {{ s.duty }}</span><span>PDV: {{ s.vat }}</span><span>Homologacija: {{ s.hom }}</span></div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600">{{ s.total }}</span>
+            <span style="font-size:13px;color:{{ s.diffColor }}">{{ s.diffText }}</span>
+          </sc-if>
+          <sc-if value="{{ s.invalid }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;line-height:1.5;color:#5d6472">{{ s.reason }}</span></sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <button type="button" onClick="{{ goStep2 }}" style="background:#ffffff;color:#121620;border:1.5px solid #121620;border-radius:8px;padding:12.5px 22px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit">Nazad</button>
+    <div style="display:flex;gap:12px;flex-wrap:wrap"><button type="button" onClick="{{ reset }}" style="background:#ffffff;color:#121620;border:1.5px solid #121620;border-radius:8px;padding:12.5px 22px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;border-color:#cdd2db">Resetuj kalkulator</button><button type="button" onClick="{{ downloadPdf }}" style="background:#1f4fb0;color:#ffffff;border:0;border-radius:8px;padding:14px 24px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Preuzmi PDF izvještaj</button></div>
+  </div>
+</sc-if>
+</div>
+
+<aside aria-label="Okvirni obračun" style="flex:1 1 320px;min-width:0;position:sticky;top:20px;display:flex;flex-direction:column;gap:16px">
+  <div style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px;gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.06em;color:#1f4fb0">OKVIRNI OBRAČUN</span><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:{{ statusBg }};color:{{ statusFg }}">{{ statusText }}</span></div>
+    <div style="display:flex;flex-direction:column">
+<sc-for list="{{ asideRows }}" as="r" hint-placeholder-count="3">
+  <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #e9ecf1;align-items:flex-start;background:{{ r.rowBg }}">
+    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-size:15px;font-weight:{{ r.weight }};color:#121620">{{ r.label }}</span><sc-if value="{{ r.hasBadge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;letter-spacing:0.02em;padding:2px 8px;border-radius:999px;background:{{ r.bBg }};color:{{ r.bFg }}">{{ r.badge }}</span></sc-if></div>
+      <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;line-height:1.5;color:#5d6472">{{ r.note }}</span></sc-if>
+    </div>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;white-space:nowrap;font-weight:{{ r.weight }};color:{{ r.color }}">{{ r.value }}</span>
+  </div>
+</sc-for></div>
+    <div style="display:flex;flex-direction:column;gap:4px;padding-top:8px"><span style="font-size:13px;color:#5d6472">Ukupno s vozilom i prijevozom</span><span style="font-size:30px;font-weight:700;letter-spacing:-0.02em;color:#1f4fb0">{{ totalText }}</span></div>
+    <span style="font-size:13px;line-height:1.5;color:#5d6472">Informativna procjena. Konačan iznos utvrđuje carinski organ.</span>
+    <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ downloadPdf }}" style="background:#1f4fb0;color:#ffffff;border:0;border-radius:8px;padding:14px 24px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Preuzmi PDF izvještaj</button></sc-if>
+  </div>
+  <div style="background:#ffffff;border:1px solid #e3e6ec;border-radius:12px;box-shadow:0 1px 2px rgba(10,16,32,0.05),0 8px 24px rgba(10,16,32,0.05);padding:clamp(20px,3vw,28px);display:flex;flex-direction:column;gap:18px;gap:12px;padding:18px 20px">
+    <button type="button" onClick="{{ toggleRates }}" aria-expanded="{{ showRates }}" style="display:flex;justify-content:space-between;background:none;border:0;padding:0;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#121620"><span>Kursevi (KM za 1 jedinicu)</span><span>{{ ratesIcon }}</span></button>
+    <sc-if value="{{ showRates }}" hint-placeholder-val="{{ false }}">
+      <span style="font-size:13px;line-height:1.5;color:#5d6472">EUR je fiksni kurs (1,95583 KM). Ostali kursevi su informativni — unesite aktuelni kurs Centralne banke BiH.</span>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        <sc-for list="{{ rateFields }}" as="k" hint-placeholder-count="4"><label style="display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:500;color:#2c323d;min-width:0">{{ k.cur }}<input type="text" inputmode="decimal" value="{{ k.value }}" onChange="{{ k.onChange }}" style="padding:12px 14px;border:1px solid #cdd2db;border-radius:8px;font-size:16px;background:#ffffff;color:#121620;outline-color:#1f4fb0;width:100%;font-family:inherit;padding:9px 10px;font-size:14px"></label></sc-for>
+      </div>
+    </sc-if>
+  </div>
+</aside>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:1400},&quot;spediterFee&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:200,&quot;tsType&quot;:&quot;number&quot;,&quot;min&quot;:0,&quot;max&quot;:2000,&quot;step&quot;:10,&quot;unit&quot;:&quot;KM&quot;}}">
+class Component extends DCLogic {
+  initial() {
+    return {
+      step: 1, maxStep: 1, adText: '', adMsg: '', adMsgOk: true,
+      price: '', currency: 'EUR', country: 'DE', showMore: false,
+      transport: '600', transportCurrency: 'EUR', transportTouched: false,
+      brand: '', model: '', year: '', category: 'M1', origin: 'UNKNOWN', euro: '', fuel: '', ccm: '', kw: '', co2: '',
+      condition: 'used', coc: 'yes', eur1: 'no', benefit: null, conflict: null,
+      invalid: { level: null, adapted: null, notUsed: null, keep: null, limit: '' }, povratnik: [null, null, null, null, null, null],
+      spediter: null, extras: [], showExtras: false, regOn: false, reg: { eko: '', ins: '', reg: '', tech: '' },
+      rates: null, showRates: false
+    };
+  }
+  state = this.initial();
+  componentDidMount() {
+    if (!window.UvozKalkulator) this._iv = setInterval(() => { if (window.UvozKalkulator) { clearInterval(this._iv); this.forceUpdate(); } }, 60);
+  }
+  componentWillUnmount() { clearInterval(this._iv); }
+  cfg() {
+    const K = window.UvozKalkulator, base = K.CONFIG;
+    if (!this.state.rates) return base;
+    const rates = {};
+    Object.keys(base.rates).forEach(c => { const v = K.parseAmount(this.state.rates[c]); rates[c] = { km: (!base.rates[c].fixed && v > 0) ? v : base.rates[c].km, fixed: base.rates[c].fixed }; });
+    return Object.assign({}, base, { rates });
+  }
+  spedDefault() { return String(this.props.spediterFee ?? window.UvozKalkulator.CONFIG.spediterDefault).replace('.', ','); }
+  input() {
+    const s = this.state;
+    return { price: s.price, currency: s.currency, transport: s.transport, transportCurrency: s.transportCurrency, spediter: s.spediter ?? this.spedDefault(),
+      category: s.category, origin: s.origin, fuel: s.fuel, euro: s.euro, year: s.year, condition: s.condition, coc: s.coc, eur1: s.eur1,
+      benefit: s.benefit, invalid: s.invalid, povratnik: s.povratnik, extras: s.extras };
+  }
+  num(v) { const K = window.UvozKalkulator, n = K.parseAmount(v); return n === null || isNaN(n) ? null : n; }
+  str(n) { return String(window.UvozKalkulator.round2(n)).replace('.', ','); }
+  changeCurrency(cur) {
+    const K = window.UvozKalkulator, n = this.num(this.state.price);
+    this.setState({ currency: cur, price: n !== null && n > 0 ? this.str(K.convert(n, this.state.currency, cur, this.cfg())) : this.state.price });
+  }
+  changeTransportCurrency(cur) {
+    const K = window.UvozKalkulator, n = this.num(this.state.transport);
+    this.setState({ transportCurrency: cur, transport: n !== null ? this.str(K.convert(n, this.state.transportCurrency, cur, this.cfg())) : this.state.transport });
+  }
+  selectCountry(id) {
+    const K = window.UvozKalkulator, c = K.CONFIG.countries.find(x => x.id === id);
+    const patch = { country: id };
+    if (!this.state.transportTouched) patch.transport = this.str(K.convert(c.transport, 'EUR', this.state.transportCurrency, this.cfg()));
+    this.setState(patch, () => { const cur = c.currency || 'EUR'; if (this.state.currency !== 'KM' && cur !== this.state.currency) this.changeCurrency(cur); });
+  }
+  fillFromAd() {
+    const K = window.UvozKalkulator, r = K.parseAd(this.state.adText), f = r.fields, patch = { adMsg: r.message, adMsgOk: r.found.length > 0 };
+    ['price', 'currency', 'year', 'brand', 'model', 'fuel', 'ccm', 'kw', 'euro', 'co2', 'condition'].forEach(k => { if (f[k] != null && f[k] !== '') patch[k] = f[k]; });
+    this.setState(patch);
+  }
+  toggleBenefit(key) {
+    const cur = this.state.benefit;
+    if (cur === key) return this.setState({ benefit: null, conflict: null });
+    if (cur && cur !== key) return this.setState({ conflict: { from: cur, to: key } });
+    this.setState({ benefit: key, conflict: null });
+  }
+  goTo(n) { if (n <= this.state.maxStep) this.setState({ step: n }); }
+  next(n) { this.setState(s => ({ step: n, maxStep: Math.max(s.maxStep, n) })); }
+  printReport(res, scen) {
+    const K = window.UvozKalkulator, s = this.state, f = K.fmt, C = K.CONFIG;
+    const name = (l, id) => (l.find(x => x.id === id) || {}).name || '—';
+    const esc = t => String(t == null || t === '' ? '—' : t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+    const tr = (a, b, strong) => '<tr' + (strong ? ' class="s"' : '') + '><td>' + esc(a) + '</td><td class="v">' + esc(b) + '</td></tr>';
+    const benName = { invalid: 'Osoba sa invaliditetom', povratnik: 'Povratnik iz inostranstva', eko: 'Nova ekološka vozila' };
+    const benStatus = { conditional: 'Uslovno primjenjivo (prema unesenim odgovorima)', notEligible: 'Nije primjenjivo', incomplete: 'Nepotpuni odgovori — nije primijenjeno', none: '—' };
+    const d = new Date(), date = d.toLocaleDateString('bs-BA') + ' ' + d.toLocaleTimeString('bs-BA', { hour: '2-digit', minute: '2-digit' });
+    let h = '<!doctype html><html><head><meta charset="utf-8"><title>Procjena troškova uvoza vozila</title><style>body{font-family:Helvetica,Arial,sans-serif;color:#121620;margin:28px;font-size:12px}h1{font-size:20px;margin:0 0 4px}h2{font-size:13px;margin:18px 0 6px;color:#1f4fb0;text-transform:uppercase;letter-spacing:.04em}table{width:100%;border-collapse:collapse}td{padding:5px 0;border-bottom:1px solid #e3e6ec;vertical-align:top}td.v{text-align:right;white-space:nowrap}tr.s td{font-weight:700}.tot{margin-top:14px;padding:12px;background:#f4f5f7;font-size:16px;font-weight:700;display:flex;justify-content:space-between}p{line-height:1.5;color:#454c59}@page{margin:14mm}</style></head><body>';
+    h += '<h1>Procjena troškova uvoza vozila u BiH</h1><p>Generisano: ' + date + ' · A&amp;A šped d.o.o., Carinski terminal Rajlovac, Sarajevo</p>';
+    h += '<h2>Vozilo</h2><table>' + tr('Marka i model', [s.brand, s.model].filter(Boolean).join(' ')) + tr('Godište', s.year) + tr('Kategorija', name(C.categories, s.category)) + tr('Stanje', s.condition === 'new' ? 'Novo' : 'Polovno') + tr('Zemlja porijekla', name(C.origins, s.origin)) + '</table>';
+    h += '<h2>Kupovina</h2><table>' + tr('Kupovna cijena', s.price + ' ' + s.currency) + tr('Protivvrijednost', f(res.priceKM)) + tr('Država kupovine', name(C.countries, s.country)) + tr('Prijevoz do granice BiH', s.transport + ' ' + s.transportCurrency + ' (' + f(res.transportKM) + ')') + '</table>';
+    h += '<h2>Tehničke specifikacije</h2><table>' + tr('Gorivo', name(C.fuels, s.fuel)) + tr('Euro norma', name(C.euroNorms, s.euro)) + tr('Kubikaža', s.ccm ? s.ccm + ' cm³' : '') + tr('Snaga', s.kw ? s.kw + ' kW (' + Math.round(+s.kw * 1.35962) + ' KS)' : '') + tr('CO₂ emisija', s.co2 ? s.co2 + ' g/km' : '') + tr('COC dokument', s.coc === 'yes' ? 'Da' : 'Ne') + tr('EUR.1 / dokaz o porijeklu', s.eur1 === 'yes' ? 'Da' + (res.preferential.applies ? '' : ' (ne primjenjuje se)') : 'Ne') + '</table>';
+    h += '<h2>Povlastica</h2><table>' + tr('Odabrana povlastica', s.benefit ? benName[s.benefit] : 'Nema') + (s.benefit ? tr('Status', benStatus[res.benefit.status] + (res.benefit.reason ? ' — ' + res.benefit.reason : '')) : '') + '</table>';
+    h += '<h2>Obračun</h2><table>' + tr('Carinska vrijednost (cijena + prijevoz)', f(res.customsValue)) + tr('Carina ' + Math.round(res.dutyRate * 1000) / 10 + '% — ' + res.dutySource, f(res.duty));
+    res.vatBaseParts.forEach(p => { h += tr('  Osnovica PDV-a: ' + p.label, f(p.value)); });
+    h += tr('Osnovica PDV-a', f(res.vatBase)) + tr('PDV ' + Math.round(res.vatRate * 100) + '%', f(res.vat)) + tr('Homologacija — ' + res.homologationNote, f(res.homologation)) + tr('Carinski terminal (procjena; propisana naknada 11,70 KM)', f(res.terminal)) + tr('Špediter (procjena)', f(res.spediter));
+    res.extras.forEach(x => { h += tr('Dodatno: ' + x.name + (x.inVat ? ' (u osnovici PDV-a)' : ''), f(x.amount)); });
+    h += tr('Ukupni troškovi uvoza', f(res.importCosts), true) + '</table>';
+    h += '<div class="tot"><span>Ukupna cijena vozila s prijevozom i uvoznim troškovima</span><span>' + f(res.total) + '</span></div>';
+    if (scen && scen.length) { h += '<h2>Poređenje scenarija</h2><table>'; scen.forEach(x => { h += tr(x.label, x.valid ? f(x.res.total) + (x.diff ? ' (' + (x.diff > 0 ? '+' : '') + f(x.diff) + ')' : '') : 'Nije primjenjivo'); }); h += '</table>'; }
+    h += '<h2>Pretpostavke</h2><p>Kurs 1 EUR = 1,95583 KM (fiksni); ostali kursevi su informativni. Carina 15% bez dokaza o porijeklu, 0% uz valjan dokaz o preferencijalnom porijeklu (SSP/EFTA). PDV 17% obračunat na carinsku vrijednost uvećanu za carinu, naknadu terminala i zavisne troškove. Homologacija prema cjenovniku (Sl. glasnik BiH 50/22). Terminal i špediter su procjene. ' + (res.warnings.length ? 'Upozorenja: ' + esc(res.warnings.join(' ')) : '') + '</p>';
+    h += '<p><strong>Napomena:</strong> Ovo je informativna procjena, a ne carinski obračun. Konačan iznos utvrđuje Uprava za indirektno oporezivanje BiH u carinskom postupku. Procjena ne uključuje registraciju, osiguranje, tablice, tehnički pregled i eko-taksu, osim ako su posebno dodani.</p></body></html>';
+    const fr = document.createElement('iframe');
+    fr.setAttribute('aria-hidden', 'true'); fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+    document.body.appendChild(fr);
+    const doc = fr.contentWindow.document; doc.open(); doc.write(h); doc.close();
+    setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) { const w = window.open('', '_blank'); if (w) { w.document.write(window.AAI18n && window.AAI18n.html ? window.AAI18n.html(h) : h); w.document.close(); w.print(); } } setTimeout(() => fr.remove(), 2000); }, 250);
+  }
+  renderVals() {
+    const K = window.UvozKalkulator;
+    if (!K) return { ready: false, notReady: true };
+    const s = this.state, C = K.CONFIG, cfg = this.cfg(), f = K.fmt;
+    const res = K.calculate(this.input(), cfg);
+    const hasPrice = res.ok && res.priceKM > 0;
+    const fRaw = K.fmt;
+    const B = '#1f4fb0', INK = '#121620';
+    const on = (a) => ({ bd: a ? B : '#cdd2db', bg: a ? B : '#ffffff', fg: a ? '#ffffff' : INK, pressed: a ? 'true' : 'false' });
+    const yn = (cur, a, b, set) => { const A = on(cur === a), Bb = on(cur === b); return { setA: () => set(a), setB: () => set(b), aPressed: A.pressed, bPressed: Bb.pressed, aBd: A.bd, aBg: A.bg, aFg: A.fg, bBd: Bb.bd, bBg: Bb.bg, bFg: Bb.fg }; };
+    const BADGE = { p: ['Propisano', '#e8eefb', B], e: ['Procjena', '#fbf1dc', '#7a4d00'], c: ['Uslovno', '#e6f4ea', '#1e6b3a'], x: ['Oslobođeno', '#e6f4ea', '#1e6b3a'] };
+    const row = (label, value, o = {}) => { const b = o.badge ? BADGE[o.badge] : null; return { label, value, note: o.note || '', hasNote: !!o.note, badge: b ? b[0] : '', hasBadge: !!b, bBg: b ? b[1] : '', bFg: b ? b[2] : '', weight: o.strong ? 700 : 400, color: o.color || INK, rowBg: 'transparent' }; };
+    const pct = r => String(Math.round(r * 1000) / 10).replace('.', ',') + ' %';
+    const name = (l, id) => (l.find(x => x.id === id) || {}).name || '—';
+    const priceN = this.num(s.price), priceErr = s.price !== '' && (priceN === null || priceN <= 0);
+    const step1Errors = [];
+    if (s.price === '') step1Errors.push('Unesite kupovnu cijenu vozila.'); else if (priceErr) step1Errors.push('Kupovna cijena mora biti pozitivan broj (bez slova i znakova minus).');
+    if (s.transport !== '' && this.num(s.transport) === null) step1Errors.push('Trošak prijevoza nije ispravan broj.');
+    const yr = parseInt(s.year, 10), cy = new Date().getFullYear(), techErrors = [];
+    if (s.year !== '' && (isNaN(yr) || !/^\d{4}$/.test(s.year.trim()) || yr < 1900 || yr > cy)) techErrors.push('Godište mora biti između 1900. i ' + cy + '.');
+    if (s.ccm !== '' && !(this.num(s.ccm) > 0) && s.fuel !== 'elektro') techErrors.push('Kubikaža mora biti pozitivan broj.');
+    if (s.kw !== '' && !(this.num(s.kw) > 0)) techErrors.push('Snaga mora biti pozitivan broj.');
+    if (s.co2 !== '' && this.num(s.co2) === null) techErrors.push('CO₂ emisija mora biti broj.');
+    const step1Blocked = step1Errors.length > 0, step2Blocked = step1Blocked || techErrors.length > 0;
+    const curRate = cfg.rates[s.currency];
+    const rateText = s.currency === 'KM' ? 'iznos u konvertibilnim markama' : '1 ' + s.currency + ' = ' + String(curRate.km).replace('.', ',') + ' KM' + (curRate.fixed ? ' (fiksni kurs)' : ' (informativni kurs)');
+    const country = C.countries.find(x => x.id === s.country);
+    const chipC = c => Object.assign({ label: c.name + ' (' + c.id + ')', onClick: () => this.selectCountry(c.id) }, on(s.country === c.id));
+    const moreSelected = !country.primary;
+    const set = (k) => (e) => this.setState({ [k]: e.target.value });
+    const benefitNames = { invalid: 'Osoba sa invaliditetom', povratnik: 'Povratnik iz inostranstva', eko: 'Povlastica za nova ekološka vozila' };
+    const benefitDesc = { invalid: 'Oslobađanje od carine i PDV-a za putnički automobil do propisanog limita vrijednosti.', povratnik: 'Lična imovina pri preseljenju u BiH: bez carine i PDV-a, uz propisane uslove.', eko: 'Snižena ili suspendovana carina za nova električna, hibridna i CNG/LPG vozila do 31.12.2026.' };
+    const ben = res.benefit;
+    let benefitMsg = '', bm = ['#e6f4ea', '#b9dfc4', '#1e5631'];
+    if (s.benefit) {
+      if (ben.status === 'conditional') benefitMsg = s.benefit === 'eko' ? 'Prema unesenim podacima vozilo može biti obuhvaćeno mjerom — carina ' + pct(res.dutyRate) + '. PDV se i dalje plaća.' : 'Prema vašim odgovorima povlastica bi mogla biti primjenjiva. Obračun prikazuje uslovni scenario: ' + [res.exempt.duty && 'carina', res.exempt.vat && 'PDV', res.exempt.homologation && 'homologacija'].filter(Boolean).join(', ') + ' — oslobođeno. Konačnu odluku donosi nadležni organ.';
+      else if (ben.status === 'incomplete') { benefitMsg = ben.reason + ' Dok odgovori nisu potpuni, prikazuje se standardni obračun.'; bm = ['#f4f5f7', '#d5d9e0', '#454c59']; }
+      else { benefitMsg = (ben.reason || 'Uslovi nisu ispunjeni.') + ' Prikazuje se standardni obračun.'; bm = ['#fdf6e7', '#f0d9a8', '#6b4500']; }
+    }
+    const povQ = ['Jeste li prije preseljenja živjeli izvan BiH najmanje 12 mjeseci neprekidno?', 'Je li vozilo bilo u vašem vlasništvu i upotrebi najmanje 6 mjeseci prije prestanka boravka u inostranstvu?', 'Jeste li ovu povlasticu već koristili u prethodnih pet godina?', 'Je li vozilo za ličnu upotrebu, a ne za taksi, dostavu ili drugu komercijalnu djelatnost?', 'Prijavljujete li vozilo za carinjenje unutar propisanog roka (12 mjeseci) nakon preseljenja u BiH?', 'Možete li zadržati vozilo bez prodaje ili prenosa vlasništva tokom propisanog perioda (36 mjeseci)?'];
+    const setPov = (i, v) => this.setState(st => { const a = st.povratnik.slice(); a[i] = v; return { povratnik: a }; });
+    const setInv = (k) => (v) => this.setState(st => ({ invalid: Object.assign({}, st.invalid, { [k]: v }) }));
+    const invLim = this.num(s.invalid.limit) || C.benefits.invalid.valueLimitKM;
+    const exemptBadge = (flag) => flag ? 'x' : 'p';
+    const homBadge = res.exempt.homologation ? 'x' : (C.homologation[s.category] ? 'p' : 'e');
+    const extrasPresets = [['Dodatni transport', true], ['Troškovi dokumentacije', false], ['COC dokument', false], ['Ostali troškovi', false]];
+    const missingMap = res.missing;
+    const statusText = !res.ok ? 'Nedostaju podaci' : (ben.status === 'conditional' ? 'Uslovni scenario' : (res.incomplete ? 'Nepotpuna procjena' : 'Procjena'));
+    const statusCol = !res.ok ? ['#fdecea', '#8c1d18'] : (ben.status === 'conditional' ? ['#e6f4ea', '#1e6b3a'] : (res.incomplete ? ['#fbf1dc', '#7a4d00'] : ['#e8eefb', B]));
+    const scen = res.ok ? K.compareScenarios(this.input(), cfg) : [];
+    const regN = k => this.num(s.reg[k]) || 0, regSum = K.round2(regN('eko') + regN('ins') + regN('reg') + regN('tech'));
+    const kwN = this.num(s.kw);
+    const stepLabels = ['Vozilo', 'Detalji', 'Rezultat'];
+    return {
+      ready: true, notReady: false,
+      steps: stepLabels.map((l, i) => { const n = i + 1, cur = s.step === n, done = n < s.step, reach = n <= s.maxStep; return { n, label: l, current: cur ? 'step' : 'false', disabled: !reach, cursor: reach ? 'pointer' : 'default', onClick: () => this.goTo(n), bd: cur ? B : '#e3e6ec', bg: cur ? '#eef3fd' : '#ffffff', fg: reach ? INK : '#9aa3b2', dotBg: cur || done ? B : '#e9ecf1', dotFg: cur || done ? '#ffffff' : '#5d6472' }; }),
+      isStep1: s.step === 1, isStep2: s.step === 2, isStep3: s.step === 3,
+      adText: s.adText, setAdText: set('adText'), fillFromAd: () => this.fillFromAd(), hasAdMsg: !!s.adMsg, adMsg: s.adMsg, adMsgColor: s.adMsgOk ? '#1e6b3a' : '#6b4500',
+      price: s.price, setPrice: set('price'), priceInvalid: priceErr ? 'true' : 'false', priceErr, priceErrText: 'Unesite pozitivan iznos, npr. 9000 ili 9.000,50.',
+      currencies: C.currencies.map(c => Object.assign({ label: c === 'KM' ? 'KM (BAM)' : c, onClick: () => this.changeCurrency(c) }, on(s.currency === c))),
+      priceKMText: f(res.priceKM), rateText,
+      primaryCountries: C.countries.filter(c => c.primary).map(chipC), moreCountries: C.countries.filter(c => !c.primary).map(chipC),
+      showMore: s.showMore || moreSelected, toggleMore: () => this.setState({ showMore: !(s.showMore || moreSelected) }), moreLabel: (s.showMore || moreSelected) ? 'Manje zemalja' : 'Ostalo (+' + C.countries.filter(c => !c.primary).length + ')',
+      transport: s.transport, setTransport: (e) => this.setState({ transport: e.target.value, transportTouched: true }),
+      transportCurrencies: ['EUR', 'KM'].map(c => Object.assign({ label: c, onClick: () => this.changeTransportCurrency(c) }, on(s.transportCurrency === c))),
+      transportKMText: f(res.transportKM), transportHint: s.transportTouched ? 'ručno uneseno · predloženo za ' + country.name + ': ' + country.transport + ' EUR' : 'procjena za ' + country.name + ': ' + country.transport + ' EUR',
+      step1Summary: [row('Kupovna cijena', (s.price || '—') + ' ' + s.currency), row('Vrijednost u KM', f(res.priceKM)), row('Država kupovine', country.name), row('Prijevoz do granice BiH', f(res.transportKM), { badge: 'e' })],
+      step1Errors, step1Blocked, step1Opacity: step1Blocked ? 0.45 : 1, goStep2: () => { if (!step1Blocked) this.next(2); },
+      f: { brand: s.brand, model: s.model, year: s.year, category: s.category, origin: s.origin, euro: s.euro, fuel: s.fuel, ccm: s.ccm, kw: s.kw, co2: s.co2 },
+      on: { brand: set('brand'), model: set('model'), year: set('year'), category: set('category'), origin: set('origin'), euro: set('euro'), fuel: set('fuel'), ccm: set('ccm'), kw: set('kw'), co2: set('co2') },
+      brands: ['Volkswagen', 'Audi', 'BMW', 'Mercedes-Benz', 'Opel', 'Ford', 'Škoda', 'Seat', 'Renault', 'Peugeot', 'Citroën', 'Dacia', 'Fiat', 'Toyota', 'Hyundai', 'Kia', 'Mazda', 'Nissan', 'Volvo', 'Tesla', 'Porsche', 'Honda'],
+      categories: C.categories, origins: C.origins, euroNorms: C.euroNorms, fuels: C.fuels,
+      ccmDisabled: s.fuel === 'elektro', ccmPlaceholder: s.fuel === 'elektro' ? 'Nije primjenjivo za električna vozila' : 'npr. 1968', ccmBg: s.fuel === 'elektro' ? '#f4f5f7' : '#ffffff',
+      ksText: kwN > 0 ? '≈ ' + Math.round(kwN * 1.35962) + ' KS (1 kW ≈ 1,35962 KS)' : '1 kW ≈ 1,35962 KS',
+      techErrors, techWarnings: res.warnings.filter(w => /Euro|Ostalo|N1/.test(w)),
+      cond: yn(s.condition, 'used', 'new', v => this.setState({ condition: v })), coc: yn(s.coc, 'yes', 'no', v => this.setState({ coc: v })), eur1: yn(s.eur1, 'yes', 'no', v => this.setState({ eur1: v })),
+      eur1Text: s.eur1 === 'yes' ? (res.preferential.applies ? 'Primjenjuje se preferencijalna carinska stopa 0%. PDV od 17% se i dalje obračunava.' : 'Dokaz je označen, ali preferencijalna stopa se ne primjenjuje (vidi napomenu).') : 'Bez dokaza o porijeklu primjenjuje se standardna stopa (' + pct(res.dutyRate || C.duty.M1) + ' za odabranu kategoriju).',
+      eur1Warnings: res.warnings.filter(w => /EUR\.1|Preferencijalni|preferencijalna/.test(w)),
+      benefitList: ['invalid', 'povratnik', 'eko'].map(k => { const a = s.benefit === k; return { label: benefitNames[k], desc: benefitDesc[k], active: a ? 'true' : 'false', onClick: () => this.toggleBenefit(k), bd: a ? B : '#e3e6ec', bg: a ? '#eef3fd' : '#ffffff', trackBg: a ? B : '#cdd2db', knobLeft: a ? '19px' : '3px' }; }),
+      hasConflict: !!s.conflict, conflictFrom: s.conflict ? benefitNames[s.conflict.from] : '', conflictTo: s.conflict ? benefitNames[s.conflict.to] : '',
+      keepConflict: () => this.setState({ conflict: null }), switchConflict: () => this.setState({ benefit: s.conflict.to, conflict: null }),
+      invActive: s.benefit === 'invalid', povActive: s.benefit === 'povratnik', ekoActive: s.benefit === 'eko',
+      invLevel: yn(s.invalid.level, 'yes', 'no', setInv('level')), invAdapted: yn(s.invalid.adapted, 'yes', 'no', setInv('adapted')), invNotUsed: yn(s.invalid.notUsed, 'yes', 'no', setInv('notUsed')), invKeep: yn(s.invalid.keep, 'yes', 'no', setInv('keep')),
+      invLimit: s.invalid.limit === '' ? String(C.benefits.invalid.valueLimitKM) : s.invalid.limit, setInvLimit: (e) => { const v = e.target.value; setInv('limit')(v); },
+      invLimitNote: C.benefits.invalid.note, invLimitCheck: s.invalid.adapted === 'yes' ? 'posebno prilagođeno vozilo — limit se ne primjenjuje' : (res.priceKM <= invLim ? 'u okviru limita od ' + f(invLim) : 'prelazi limit od ' + f(invLim)),
+      povQuestions: povQ.map((t, i) => { const v = s.povratnik[i], Y = on(v === 'yes'), N = on(v === 'no'); return { n: i + 1, text: t, setYes: () => setPov(i, 'yes'), setNo: () => setPov(i, 'no'), yesPressed: Y.pressed, noPressed: N.pressed, yesBd: Y.bd, yesBg: Y.bg, yesFg: Y.fg, noBd: N.bd, noBg: N.bg, noFg: N.fg }; }),
+      hasBenefitMsg: !!benefitMsg, benefitMsg, benefitMsgBg: bm[0], benefitMsgBd: bm[1], benefitMsgFg: bm[2],
+      step2Summary: [['Marka i model', [s.brand, s.model].filter(Boolean).join(' ') || '—'], ['Godište', s.year || '—'], ['Kategorija', s.category], ['Država kupovine', country.name], ['Kupovna cijena', f(res.priceKM)], ['Prijevoz', f(res.transportKM)], ['Euro norma', name(C.euroNorms, s.euro)], ['Gorivo', s.fuel ? name(C.fuels, s.fuel) : '—'], ['Kubikaža', s.ccm ? s.ccm + ' cm³' : '—'], ['Snaga', s.kw ? s.kw + ' kW' : '—'], ['CO₂ emisija', s.co2 ? s.co2 + ' g/km' : '—'], ['Stanje', s.condition === 'new' ? 'Novo' : 'Polovno'], ['COC', s.coc === 'yes' ? 'Da' : 'Ne'], ['EUR.1', s.eur1 === 'yes' ? 'Da' : 'Ne'], ['Povlastica', s.benefit ? benefitNames[s.benefit] : 'Nema']].map(r => ({ label: r[0], value: r[1] })),
+      goStep1: () => this.goTo(1), goStep3: () => { if (!step2Blocked) this.next(3); }, step2Blocked, step2Opacity: step2Blocked ? 0.45 : 1,
+      incomplete: res.incomplete, missingText: missingMap.join(', '), resultWarnings: res.warnings,
+      baseRows: [row('Kupovna cijena vozila', f(res.priceKM), { note: s.price + ' ' + s.currency }), row('+ Prijevoz do granice BiH', f(res.transportKM), { badge: 'e' }), row('= Procijenjena carinska vrijednost', f(res.customsValue), { strong: true })],
+      dutyRows: [row('Carinska vrijednost', f(res.customsValue)), row('Carinska stopa', pct(res.dutyRate), { note: res.dutySource, badge: res.exempt.duty ? 'c' : 'p' }), row('Carina', f(res.duty), { strong: true, badge: res.exempt.duty ? 'x' : '' })]
+        .concat(res.vatBaseParts.map(p => row('Osnovica PDV-a: ' + p.label.toLowerCase(), f(p.value), { note: p.label === 'Naknada carinskog terminala' ? 'Uračunato konzervativno — tretman nije razriješen iz primarnog izvora.' : '' })))
+        .concat([row('Osnovica za PDV', f(res.vatBase)), row('Stopa PDV-a', pct(res.vatRate), { badge: res.exempt.vat ? 'c' : 'p' }), row('PDV', f(res.vat), { strong: true, badge: res.exempt.vat ? 'x' : '' })]),
+      feeRows: [row('Homologacija', f(res.homologation), { badge: homBadge, note: (s.coc === 'yes' ? 'Sa COC dokumentom' : 'Bez COC dokumenta') + ' · kategorija ' + s.category + '. ' + res.homologationNote }), row('Carinski terminal', f(res.terminal), { badge: 'e', note: 'Propisana naknada za putničko vozilo je 11,70 KM; terminali naplaćuju i vlastite usluge.' }), row('Špediter', f(res.spediter), { badge: 'e', note: 'Procjena — nije univerzalno propisana cijena.' })],
+      spediter: s.spediter ?? this.spedDefault(), setSpediter: set('spediter'),
+      showExtras: s.showExtras, toggleExtras: () => this.setState({ showExtras: !s.showExtras }), extrasIcon: s.showExtras ? '−' : '+', extrasTotalText: f(res.extrasTotal),
+      extras: s.extras.map((x, i) => ({ name: x.name, amount: x.amount, inVat: x.inVat, setName: (e) => { const v = e.target.value; this.setState(st => ({ extras: st.extras.map((y, j) => j === i ? Object.assign({}, y, { name: v }) : y) })); }, setAmount: (e) => { const v = e.target.value; this.setState(st => ({ extras: st.extras.map((y, j) => j === i ? Object.assign({}, y, { amount: v }) : y) })); }, toggleVat: () => this.setState(st => ({ extras: st.extras.map((y, j) => j === i ? Object.assign({}, y, { inVat: !y.inVat }) : y) })), remove: () => this.setState(st => ({ extras: st.extras.filter((y, j) => j !== i) })) })),
+      extraPresets: extrasPresets.map(p => { const used = p[0] !== 'Ostali troškovi' && s.extras.some(x => x.name === p[0]); return { label: p[0], disabled: used, opacity: used ? 0.4 : 1, add: () => { if (!used) this.setState(st => ({ extras: st.extras.concat([{ name: p[0], amount: '', inVat: p[1] }]) })); } }; }),
+      importRows: [row('Carina', f(res.duty)), row('PDV', f(res.vat)), row('Homologacija', f(res.homologation)), row('Carinski terminal', f(res.terminal)), row('Špediter', f(res.spediter)), row('Dodatne naknade', f(res.extrasTotal)), row('Ukupni troškovi uvoza', f(res.importCosts), { strong: true, color: B })],
+      totalText: hasPrice ? f(res.total) : '—', totalHint: hasPrice ? '' : 'Unesite kupovnu cijenu',
+      totalSummary: [['Cijena vozila', res.priceKM], ['Prijevoz', res.transportKM], ['Uvozne dažbine', res.duties], ['Naknade', res.fees], ['Ukupna cijena', res.total]].map(t => ({ label: t[0], value: f(t[1]) })),
+      regOn: s.regOn, toggleReg: () => this.setState({ regOn: !s.regOn }),
+      regFields: [['eko', 'Eko-taksa'], ['ins', 'Obavezno osiguranje (AO)'], ['reg', 'Registracija i tablice'], ['tech', 'Tehnički pregled']].map(g => ({ label: g[1] + ' (KM)', value: s.reg[g[0]], onChange: (e) => { const v = e.target.value; this.setState(st => ({ reg: Object.assign({}, st.reg, { [g[0]]: v }) })); } })),
+      co2Note: s.co2 ? 'Eko-taksa zavisi od entiteta/kantona i CO₂ emisije (uneseno: ' + s.co2 + ' g/km). Unesite iznos prema važećem cjenovniku.' : 'Eko-taksa zavisi od entiteta/kantona i CO₂ emisije. Unesite iznos ako ga znate.',
+      regRows: [row('Troškovi registracije', f(regSum), { badge: 'e' }), row('Ukupno s registracijom', f(res.total + regSum), { strong: true })],
+      scenarios: scen.map(x => { const cur = (x.key === 'ben') || (x.key === 'eur1' && s.eur1 === 'yes' && !s.benefit) || (x.key === 'std' && s.eur1 !== 'yes' && !s.benefit); return { label: x.label, valid: x.valid, invalid: !x.valid, reason: x.reason || 'Uslovi nisu potvrđeni.', duty: f(x.res.duty), vat: f(x.res.vat), hom: f(x.res.homologation), total: f(x.res.total), diffText: x.key === 'std' ? 'Osnovni scenarij' : (x.diff === 0 ? 'Bez razlike' : (x.diff < 0 ? 'Jeftinije za ' + f(-x.diff) : 'Skuplje za ' + f(x.diff)) + (x.why.length ? ' (' + x.why.join(', ') + ')' : '')), diffColor: x.diff < 0 ? '#1e6b3a' : '#5d6472', bd: cur ? B : '#e3e6ec', bg: cur ? '#eef3fd' : '#ffffff' }; }),
+      reset: () => this.setState(this.initial()), downloadPdf: () => this.printReport(res, scen),
+      statusText, statusBg: statusCol[0], statusFg: statusCol[1],
+      asideRows: hasPrice ? [row('Cijena vozila', f(res.priceKM)), row('Prijevoz', f(res.transportKM)), row('Carina', f(res.duty), { note: pct(res.dutyRate) }), row('PDV', f(res.vat)), row('Homologacija, terminal, špediter', f(K.round2(res.homologation + res.terminal + res.spediter))), row('Uvozni troškovi', f(res.importCosts), { strong: true })]
+        : [row('Cijena vozila', '—', { note: 'Unesite kupovnu cijenu za obračun.' }), row('Prijevoz', f(res.transportKM)), row('Carina', '—'), row('PDV', '—'), row('Uvozni troškovi', '—', { strong: true })],
+      showRates: s.showRates, toggleRates: () => this.setState({ showRates: !s.showRates }), ratesIcon: s.showRates ? '−' : '+',
+      rateFields: ['CHF', 'GBP', 'USD', 'SEK'].map(c => ({ cur: c, value: s.rates && s.rates[c] != null ? s.rates[c] : String(C.rates[c].km).replace('.', ','), onChange: (e) => { const v = e.target.value; this.setState(st => ({ rates: Object.assign({}, st.rates || {}, { [c]: v }) })); } }))
+    };
+  }
+}
+</script>
+</body>
+</html>
